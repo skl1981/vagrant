@@ -1,0 +1,65 @@
+servers=[
+      {
+        :hostname => "httpd",
+        :ip => "192.168.56.10",
+        :box => "sbeliakou/centos",
+        :ram => 1024,
+        :path => "httpd.sh",
+      },
+      {
+        :hostname => "tomcat1",
+        :ip => "192.168.56.20",
+        :box => "sbeliakou/centos",
+        :ram => 2048,
+        :path => "tomcat.sh",
+      },
+      {
+        :hostname => "tomcat2",
+        :ip => "192.168.56.30",
+        :box => "sbeliakou/centos",
+        :ram => 2048,
+        :path => "tomcat.sh",
+      },
+    ]
+Vagrant.configure("2") do |config|
+  servers.each do |machine|
+    config.vm.define machine[:hostname] do |node|
+      node.vm.box = machine[:box]
+      node.vm.box_check_update = true
+      node.vm.hostname = machine[:hostname]
+      node.vm.network "private_network", ip: machine[:ip]
+      node.vm.provision "shell", path: machine[:path]
+      node.vm.provider "virtualbox" do |vb|
+        vb.name = machine[:hostname]
+        vb.memory = machine[:ram]
+      end
+    end
+  end
+end
+
+
+
+
+
+sudo yum install httpd -y
+sudo cp /vagrant/vhost.conf /etc/httpd/conf.d/
+sudo systemctl start httpd
+sudo systemctl enable httpd
+
+
+
+sudo yum install tomcat -y
+yum install tomcat-webapps tomcat-admin-webapps -y
+sudo cp /vagrant/clusterjsp.war /usr/share/tomcat/webapps/
+sudo systemctl enable tomcat
+sudo systemctl start tomcat
+
+
+
+
+
+
+
+
+
+
