@@ -1,0 +1,34 @@
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "sbeliakou/centos"
+
+  config.vm.define "httpd" do |httpd|
+    httpd.vm.hostname = "apache"
+    httpd.vm.network "private_network", ip: "192.168.56.5"
+    httpd.vm.provider "virtualbox" do |v|
+      v.memory = 1024
+      v.name = "apache"
+    end
+    httpd.vm.provision "shell", inline: "
+      yum install httpd -y
+      cp /vagrant/tomcat.conf /etc/httpd/conf.d/
+      systemctl start httpd "
+  end
+
+  (1..2).each do |i|
+    config.vm.define "tomcat#{i}" do |tomcat|
+      tomcat.vm.hostname = "tomcat#{i}"
+      tomcat.vm.network "private_network", ip: "192.168.56.#{5+i}"
+      tomcat.vm.provider "virtualbox" do |v|
+        v.memory = 2048
+        v.name = "tomcat#{i}"
+      end
+      tomcat.vm.provision "shell", inline: "
+        yum install tomcat -y
+        yum install tomcat-webapps tomcat-admin-webapps -y
+        cp /vagrant/clusterjsp.war /usr/share/tomcat/webapps/
+        systemctl enable tomcat
+        systemctl start tomcat"
+    end
+  end
+end
